@@ -27,5 +27,17 @@ public class SumNumbers {
 
     }
 
+    @SneakyThrows
+    public static long singleThreadSynchronizedSum(){
+        final NumberProvider numberProvider = new SynchronizedNumberProvider();
+        return executorService.submit( () -> {
+            long sum = 0L;
+            for(int i = 0; i < LIMIT; i++){
+                sum += numberProvider.next();
+            }
+            return sum;
+        }).get();
+    }
+
 
 }

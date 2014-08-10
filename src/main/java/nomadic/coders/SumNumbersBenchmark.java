@@ -16,6 +16,7 @@ public class SumNumbersBenchmark extends Benchmark {
         return dummy;
     }
 
+
     public static void main(String[] args){
         CaliperMain.main(SumNumbersBenchmark.class, args);
     }

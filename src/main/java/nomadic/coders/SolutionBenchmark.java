@@ -8,7 +8,7 @@ import com.google.caliper.runner.CaliperMain;
  */
 public class SolutionBenchmark extends Benchmark {
 
-    public int timeMyOperation(int reps){
+    public int timeUpperSpiralSum(int reps){
         Solution solution = new Solution();
         int[][] A = {
                 {-200_000_000,  3,  8,  9,  4,  1,  3, -2},

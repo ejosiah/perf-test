@@ -15,10 +15,49 @@ public class SumNumbersBenchmark extends Benchmark {
         }
         return dummy;
     }
-    public long timeSumSynchronizedNumberrsAndSingleThread(int reps){
+
+    public long timeSumSynchronizedNumbersAndSingleThread(int reps){
         long dummy = 0L;
         for(int i = 0; i < reps; i++){
             dummy |= SumNumbers.singleThreadSynchronizedSum();
+        }
+        return dummy;
+    }
+
+    public long timeSumAtomicNumbersAndSingleThread(int reps){
+        long dummy = 0L;
+        for(int i = 0; i < reps; i++){
+            dummy |= SumNumbers.singleThreadAtomicSum();
+        }
+        return dummy;
+    }
+
+    public long timeSumSynchronizedNumbersAndTwoThread(int reps){
+        long dummy = 0L;
+        for(int i = 0; i < reps; i++){
+            dummy |= SumNumbers.TwoThreadsAndSynchronizedSum();
+        }
+        return dummy;
+    }
+    public long timeSumAtomicNumbersAndTwoThread(int reps){
+        long dummy = 0L;
+        for(int i = 0; i < reps; i++){
+            dummy |= SumNumbers.TwoThreadsAndAtomicSum();
+        }
+        return dummy;
+    }
+
+    public long timeSumSynchronizedNumbersAndThreeThread(int reps){
+        long dummy = 0L;
+        for(int i = 0; i < reps; i++){
+            dummy |= SumNumbers.ThreeThreadsAndSynchronizedSum();
+        }
+        return dummy;
+    }
+    public long timeSumAtomicNumbersAndThreeThread(int reps){
+        long dummy = 0L;
+        for(int i = 0; i < reps; i++){
+            dummy |= SumNumbers.ThreeThreadsAndAtomicSum();
         }
         return dummy;
     }

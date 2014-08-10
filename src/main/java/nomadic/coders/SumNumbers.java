@@ -39,5 +39,39 @@ public class SumNumbers {
         }).get();
     }
 
+    @SneakyThrows
+    public static long singleThreadAtomicSum(){
+        final NumberProvider numberProvider = new AtomicNumberProvider();
+        return executorService.submit( () -> {
+            long sum = 0L;
+            for(int i = 0; i < LIMIT; i++){
+                sum += numberProvider.next();
+            }
+            return sum;
+        }).get();
+    }
 
+    @SneakyThrows
+    public static long TwoThreadsAndSynchronizedSum(){
+        final NumberProvider numberProvider = new SynchronizedNumberProvider();
+        return executorService.submit( () -> {
+            long sum = 0L;
+            for(int i = 0; i < LIMIT; i++){
+                sum += numberProvider.next();
+            }
+            return sum;
+        }).get();
+    }
+
+    public static long sumOfNaturalNumbers(long n){
+        return n * (n + 1)/2;
+    }
+
+    private static class SumTask implements Runnable{
+
+        @Override
+        public void run() {
+
+        }
+    }
 }

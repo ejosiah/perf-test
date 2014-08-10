@@ -8,10 +8,17 @@ import com.google.caliper.runner.CaliperMain;
  */
 public class SumNumbersBenchmark extends Benchmark {
 
-    public long testSumDefaultNumbersAndSingleThread(int reps){
+    public long timeSumDefaultNumbersAndSingleThread(int reps){
         long dummy = 0L;
         for(int i = 0; i < reps; i++){
             dummy |= SumNumbers.singleThreadDefaultSum();
+        }
+        return dummy;
+    }
+    public long timeSumSynchronizedNumberrsAndSingleThread(int reps){
+        long dummy = 0L;
+        for(int i = 0; i < reps; i++){
+            dummy |= SumNumbers.singleThreadSynchronizedSum();
         }
         return dummy;
     }

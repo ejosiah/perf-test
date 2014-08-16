@@ -64,6 +64,6 @@ public class SumNumbersBenchmark extends Benchmark {
 
 
     public static void main(String[] args){
-        CaliperMain.main(SumNumbersBenchmark.class, args);
+        CaliperMain.main(SumNumbersBenchmark.class, new String[]{"-l='5 min'"});
     }
 }

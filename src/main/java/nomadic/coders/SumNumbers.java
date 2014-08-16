@@ -13,53 +13,49 @@ import java.util.stream.LongStream;
 public class SumNumbers {
 
     private static final int LIMIT = 5_000_000;
-    private static final ExecutorService executorService = Executors.newFixedThreadPool(4);
+    public static ExecutorService executorService;
 
     @SneakyThrows
     public static long singleThreadDefaultSum(){
         final NumberProvider numberProvider = new DefaultNumberProvider();
-        return executorService.submit( () -> {
-            long sum = 0L;
-            for(int i = 0; i < LIMIT; i++){
-                sum += numberProvider.next();
-            }
-            return sum;
-        }).get();
-
+        long sum = 0L;
+        for(int i = 0; i < LIMIT; i++){
+            sum += numberProvider.next();
+        }
+        return sum;
     }
 
     @SneakyThrows
     public static long singleThreadSynchronizedSum(){
         final NumberProvider numberProvider = new SynchronizedNumberProvider();
-        return executorService.submit( () -> {
-            long sum = 0L;
-            for(int i = 0; i < LIMIT; i++){
-                sum += numberProvider.next();
-            }
-            return sum;
-        }).get();
+        long sum = 0L;
+        for(int i = 0; i < LIMIT; i++){
+            sum += numberProvider.next();
+        }
+        return sum;
     }
 
     @SneakyThrows
     public static long singleThreadAtomicSum(){
         final NumberProvider numberProvider = new AtomicNumberProvider();
-        return executorService.submit( () -> {
-            long sum = 0L;
-            for(int i = 0; i < LIMIT; i++){
-                sum += numberProvider.next();
-            }
-            return sum;
-        }).get();
+        long sum = 0L;
+        for(int i = 0; i < LIMIT; i++){
+            sum += numberProvider.next();
+        }
+        return sum;
     }
 
     @SneakyThrows
     public static long TwoThreadsAndSynchronizedSum(){
         final NumberProvider numberProvider = new SynchronizedNumberProvider();
-        final CountDownLatch latch = new CountDownLatch(2);
+        final CountDownLatch startGate = new CountDownLatch(1);
+        final CountDownLatch endGate = new CountDownLatch(2);
         long sum = 0;
-        executorService.submit( new SumTask(LIMIT, sum, numberProvider, latch));
-        executorService.submit( new SumTask(LIMIT, sum, numberProvider, latch));
-        latch.await();
+        executorService.submit( new SumTask(LIMIT, sum, numberProvider, startGate, endGate));
+        executorService.submit( new SumTask(LIMIT, sum, numberProvider, startGate, endGate));
+
+        startGate.countDown();
+        endGate.await();
 
         return sum;
     }
@@ -67,23 +63,30 @@ public class SumNumbers {
     @SneakyThrows
     public static long TwoThreadsAndAtomicSum(){
         final NumberProvider numberProvider = new AtomicNumberProvider();
-        final CountDownLatch latch = new CountDownLatch(2);
+        final CountDownLatch startGate = new CountDownLatch(1);
+        final CountDownLatch endGate = new CountDownLatch(2);
         long sum = 0;
-        executorService.submit( new SumTask(LIMIT, sum, numberProvider, latch));
-        executorService.submit( new SumTask(LIMIT, sum, numberProvider, latch));
-        latch.await();
+        executorService.submit( new SumTask(LIMIT, sum, numberProvider, startGate, endGate));
+        executorService.submit( new SumTask(LIMIT, sum, numberProvider, startGate, endGate));
+
+        startGate.countDown();
+        endGate.await();
+
 
         return sum;
     }
     @SneakyThrows
     public static long ThreeThreadsAndSynchronizedSum(){
         final NumberProvider numberProvider = new SynchronizedNumberProvider();
-        final CountDownLatch latch = new CountDownLatch(3);
+        final CountDownLatch startGate = new CountDownLatch(1);
+        final CountDownLatch endGate = new CountDownLatch(3);
         long sum = 0;
-        executorService.submit( new SumTask(LIMIT, sum, numberProvider, latch));
-        executorService.submit( new SumTask(LIMIT, sum, numberProvider, latch));
-        executorService.submit( new SumTask(LIMIT, sum, numberProvider, latch));
-        latch.await();
+        executorService.submit( new SumTask(LIMIT, sum, numberProvider, startGate, endGate));
+        executorService.submit( new SumTask(LIMIT, sum, numberProvider, startGate, endGate));
+        executorService.submit( new SumTask(LIMIT, sum, numberProvider, startGate, endGate));
+
+        startGate.countDown();
+        endGate.await();
 
         return sum;
     }
@@ -91,12 +94,16 @@ public class SumNumbers {
     @SneakyThrows
     public static long ThreeThreadsAndAtomicSum(){
         final NumberProvider numberProvider = new AtomicNumberProvider();
-        final CountDownLatch latch = new CountDownLatch(3);
+        final CountDownLatch startGate = new CountDownLatch(1);
+        final CountDownLatch endGate = new CountDownLatch(3);
         long sum = 0;
-        executorService.submit( new SumTask(LIMIT, sum, numberProvider, latch));
-        executorService.submit( new SumTask(LIMIT, sum, numberProvider, latch));
-        executorService.submit( new SumTask(LIMIT, sum, numberProvider, latch));
-        latch.await();
+        executorService.submit( new SumTask(LIMIT, sum, numberProvider, startGate, endGate));
+        executorService.submit( new SumTask(LIMIT, sum, numberProvider, startGate, endGate));
+        executorService.submit( new SumTask(LIMIT, sum, numberProvider, startGate, endGate));
+
+
+        startGate.countDown();
+        endGate.await();
 
         return sum;
     }
@@ -113,24 +120,28 @@ public class SumNumbers {
 
         private final int limit;
         private final NumberProvider numberProvider;
-        private final CountDownLatch latch;
+        private final CountDownLatch startGate;
+        private final CountDownLatch endGate;
         private long sum;
 
-        public SumTask(int limit, long sum, NumberProvider numberProvider, CountDownLatch latch){
+        public SumTask(int limit, long sum, NumberProvider numberProvider, CountDownLatch startGate, CountDownLatch endGate){
             this.limit = limit;
             this.sum = sum;
             this.numberProvider = numberProvider;
-            this.latch = latch;
+            this.startGate = startGate;
+            this.endGate = endGate;
         }
 
         @Override
+        @SneakyThrows
         public void run() {
             long expected = sumOfNaturalNumbers(limit);
-
-            while(sum != expected){
+            startGate.await();
+            while(sum < expected){
                 sum += numberProvider.next();
             }
-            latch.countDown();
+            endGate.countDown();
         }
     }
+
 }

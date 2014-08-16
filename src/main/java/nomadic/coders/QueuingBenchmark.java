@@ -15,51 +15,52 @@ import java.util.concurrent.Executors;
  */
 public class QueuingBenchmark extends Benchmark {
 
-    @Param({"5", "10", "20"}) int nConsumers;
-    @Param({"100", "1000", "10000"}) int queueSize;
+    @Param({"1"}) private int nConsumers;
+    @Param({"10"}) private int queueSize;
+
+//    @Param({"5", "10", "20"}) int nConsumers;
+//    @Param({"100", "1000", "10000"}) int queueSize;
     ArrayBlockingQueue<Integer> queue;
     Random rng = new SecureRandom();
-    CountDownLatch latch;
 
     @Override
     protected void setUp() throws Exception {
         Queuing.executor = Executors.newFixedThreadPool(nConsumers);
-        queue = new ArrayBlockingQueue<Integer>(queueSize);
+        queue = new ArrayBlockingQueue<Integer>(queueSize + 100);
         for(int i =0; i < queueSize; i++){
             queue.put(rng.nextInt(Integer.MAX_VALUE));
         }
-        latch = new CountDownLatch(nConsumers);
+      //  System.out.printf("running test with %s consumers and queue size of %s\n", nConsumers, queueSize);
+      //  System.out.println("queue: " + queue);
+
     }
 
     @Override
     protected void tearDown() throws Exception {
-        super.tearDown();
+        Queuing.executor.shutdownNow();
     }
 
     public void timeOneQueueManyConsumers(int reps) throws Exception{
         poison(queue);
         for(int i = 0; i < reps; i++){
-            Queuing.oneQueueManyConsumers(queue, nConsumers, latch);
+            Queuing.oneQueueManyConsumers(queue, nConsumers);
         }
-        latch.await();
-        Queuing.executor.shutdownNow();
+
     }
 
     public void timeQueuePerConsumer(int reps) throws Exception{
         ArrayBlockingQueue<Integer>[] queues = new ArrayBlockingQueue[nConsumers];
         split(queue, queues);
         for(int i = 0; i < reps; i++){
-            Queuing.QueuePerConsumer(nConsumers, latch, queues);
+            Queuing.QueuePerConsumer(nConsumers, queues);
         }
-        latch.await();
-        Queuing.executor.shutdownNow();
     }
 
     private void split(ArrayBlockingQueue<Integer> queue, ArrayBlockingQueue<Integer>[] queues) {
         int size = queueSize/nConsumers;
         for(int i = 0; i < queues.length; i++){
-            queues[i] = new ArrayBlockingQueue<Integer>(size);
-            for(int j = 0; j < size; i++){
+            queues[i] = new ArrayBlockingQueue<Integer>(size+50);
+            for(int j = 0; j < size; j++){
                 queues[i].add(queue.remove());
             }
             poison(queues[i]);
@@ -77,6 +78,6 @@ public class QueuingBenchmark extends Benchmark {
     }
 
     public static void main(String...args){
-        CaliperMain.main(QueuingBenchmark.class, args);
+        CaliperMain.main(QueuingBenchmark.class, new String[]{"--verbose", "-l", "5 minutes"});
     }
 }

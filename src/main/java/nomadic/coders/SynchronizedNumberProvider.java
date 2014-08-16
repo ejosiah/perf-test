@@ -6,9 +6,7 @@ package nomadic.coders;
 public class SynchronizedNumberProvider extends DefaultNumberProvider {
 
     @Override
-    public int next(){
-        synchronized (this){
-            return super.next();
-        }
+    public synchronized int next(){
+        return super.next();
     }
 }

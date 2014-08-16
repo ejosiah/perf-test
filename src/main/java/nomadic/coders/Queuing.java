@@ -13,12 +13,24 @@ public class Queuing {
 
     static ExecutorService executor;
 
-    public static void oneQueueManyConsumers(ArrayBlockingQueue<Integer> queue, int nConsumers, CountDownLatch latch){
+    public static void oneQueueManyConsumers(ArrayBlockingQueue<Integer> queue, int nConsumers){
+        CountDownLatch latch = new CountDownLatch(nConsumers);
         IntStream.range(0, nConsumers).forEach( (i) -> executor.execute(new Consumer(queue, latch)));
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
-    public static void QueuePerConsumer(int nConsumers, CountDownLatch latch, ArrayBlockingQueue<Integer>...queues){
+    public static void QueuePerConsumer(int nConsumers, ArrayBlockingQueue<Integer>...queues){
+        CountDownLatch latch = new CountDownLatch(nConsumers);
         IntStream.range(0, nConsumers).forEach( (i) -> executor.execute(new Consumer(queues[i], latch)));
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -42,6 +54,7 @@ public class Queuing {
                 }
                 if(i == Integer.MAX_VALUE){
                     latch.countDown();
+                 //   System.out.printf("conusmer %s doing processing now exiting...", Thread.currentThread().getName());
                     break;
                 }
             }
